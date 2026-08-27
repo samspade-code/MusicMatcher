@@ -1,2 +1,2 @@
-# MusicMapper
-An app fot mapping music
+# MusicMatcher
+An app for mapping music
