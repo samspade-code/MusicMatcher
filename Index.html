@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Matcher</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-10 font-sans">
+  <div class="max-w-3xl mx-auto space-y-6">
+    
+    <!-- Header -->
+    <header class="text-center space-y-2">
+      <h1 class="text-4xl md:text-5xl font-black text-indigo-400 tracking-tight">Music Matcher</h1>
+      <p class="text-slate-400 text-sm md:text-base">Match chord progressions across classical, pop, rock, and film scores.</p>
+    </header>
+
+    <!-- Builder Card -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center">
+        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Active Progression:</span>
+        <button onclick="clearProgression()" class="text-xs text-rose-400 hover:text-rose-300 font-medium">Clear All</button>
+      </div>
+
+      <!-- Selected Chords Bar -->
+      <div id="progression-display" class="flex gap-2 min-h-[56px] items-center p-3 bg-slate-950 rounded-xl border border-slate-800 overflow-x-auto"></div>
+
+      <!-- Chord Selector Buttons -->
+      <div class="grid grid-cols-4 sm:grid-cols-6 gap-2 pt-2">
+        <button onclick="addChord('I')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-indigo-300 shadow">I</button>
+        <button onclick="addChord('i')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-indigo-300 shadow">i</button>
+        <button onclick="addChord('ii')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-slate-200 shadow">ii</button>
+        <button onclick="addChord('iii')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-slate-200 shadow">iii</button>
+        <button onclick="addChord('III')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-slate-200 shadow">III</button>
+        <button onclick="addChord('IV')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-indigo-300 shadow">IV</button>
+        <button onclick="addChord('iv')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-slate-200 shadow">iv</button>
+        <button onclick="addChord('V')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-indigo-300 shadow">V</button>
+        <button onclick="addChord('v')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-slate-200 shadow">v</button>
+        <button onclick="addChord('vi')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-indigo-300 shadow">vi</button>
+        <button onclick="addChord('VI')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-slate-200 shadow">VI</button>
+        <button onclick="addChord('VII')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-slate-200 shadow">VII</button>
+      </div>
+    </div>
+
+    <!-- Results Section -->
+    <section class="space-y-4">
+      <div class="flex justify-between items-center px-1">
+        <h2 class="text-lg font-bold text-slate-200">Matching Music</h2>
+        <span class="text-xs bg-indigo-900/60 text-indigo-300 px-3 py-1 rounded-full font-semibold border border-indigo-700/50">
+          <span id="results-count">0</span> matches found
+        </span>
+      </div>
+      <div id="results-list" class="space-y-3"></div>
+    </section>
+
+  </div>
+
+  <script>
+    // Expanded Catalog Across Genres
+    const MUSIC_CATALOG = [
+      { id: '1', title: 'Symphony No. 5 in C Minor', artist: 'Ludwig van Beethoven', genre: 'Classical', year: 1808, key: 'C Minor', progression: ['i', 'VII', 'VI', 'V'], chords: ['Cm', 'Bb', 'Ab', 'G'] },
+      { id: '2', title: 'Canon in D', artist: 'Johann Pachelbel', genre: 'Classical', year: 1680, key: 'D Major', progression: ['I', 'V', 'vi', 'iii', 'IV', 'I', 'IV', 'V'], chords: ['D', 'A', 'Bm', 'F#m', 'G', 'D', 'G', 'A'] },
+      { id: '3', title: 'Let It Be', artist: 'The Beatles', genre: 'Pop', year: 1970, key: 'C Major', progression: ['I', 'V', 'vi', 'IV'], chords: ['C', 'G', 'Am', 'F'] },
+      { id: '4', title: 'No Woman, No Cry', artist: 'Bob Marley', genre: 'Reggae', year: 1974, key: 'C Major', progression: ['I', 'V', 'vi', 'IV'], chords: ['C', 'G', 'Am', 'F'] },
+      { id: '5', title: 'Hotel California', artist: 'Eagles', genre: 'Rock', year: 1977, key: 'B Minor', progression: ['i', 'VII', 'VI', 'V'], chords: ['Bm', 'A', 'G', 'F#'] },
+      { id: '6', title: "Don't Stop Believin'", artist: 'Journey', genre: 'Rock', year: 1981, key: 'E Major', progression: ['I', 'V', 'vi', 'IV'], chords: ['E', 'B', 'C#m', 'A'] },
+      { id: '7', title: 'Winter (The Four Seasons)', artist: 'Antonio Vivaldi', genre: 'Classical', year: 1723, key: 'F Minor', progression: ['i', 'VII', 'VI', 'V'], chords: ['Fm', 'Eb', 'Db', 'C'] },
+      { id: '8', title: 'Someone Like You', artist: 'Adele', genre: 'Pop', year: 2011, key: 'A Major', progression: ['I', 'V', 'vi', 'IV'], chords: ['A', 'E', 'F#m', 'D'] },
+      { id: '9', title: 'Creep', artist: 'Radiohead', genre: 'Alternative', year: 1992, key: 'G Major', progression: ['I', 'III', 'IV', 'iv'], chords: ['G', 'B', 'C', 'Cm'] },
+      { id: '10', title: 'Africa', artist: 'Toto', genre: 'Pop/Rock', year: 1982, key: 'F# Minor', progression: ['vi', 'IV', 'I', 'V'], chords: ['F#m', 'D', 'A', 'E'] },
+      { id: '11', title: 'Time (Inception Soundtrack)', artist: 'Hans Zimmer', genre: 'Film Score', year: 2010, key: 'A Minor', progression: ['vi', 'IV', 'I', 'V'], chords: ['Am', 'F', 'C', 'G'] },
+      { id: '12', title: 'Despacito', artist: 'Luis Fonsi', genre: 'Latin Pop', year: 2017, key: 'B Minor', progression: ['vi', 'IV', 'I', 'V'], chords: ['Bm', 'G', 'D', 'A'] },
+      { id: '13', title: 'House of the Rising Sun', artist: 'The Animals', genre: 'Folk Rock', year: 1964, key: 'A Minor', progression: ['i', 'III', 'IV', 'VI'], chords: ['Am', 'C', 'D', 'F'] },
+      { id: '14', title: 'Prelude in C Major (BWV 846)', artist: 'J.S. Bach', genre: 'Classical', year: 1722, key: 'C Major', progression: ['I', 'ii', 'V', 'I'], chords: ['C', 'Dm', 'G', 'C'] },
+      { id: '15', title: 'Love Story', artist: 'Taylor Swift', genre: 'Pop', year: 2008, key: 'D Major', progression: ['I', 'V', 'vi', 'IV'], chords: ['D', 'A', 'Bm', 'G'] },
+      { id: '16', title: 'Piano Sonata No. 16 in C', artist: 'W.A. Mozart', genre: 'Classical', year: 1788, key: 'C Major', progression: ['I', 'V', 'I', 'IV', 'I', 'V'], chords: ['C', 'G', 'C', 'F', 'C', 'G'] },
+      { id: '17', title: 'Wonderwall', artist: 'Oasis', genre: 'Britpop', year: 1995, key: 'F# Minor', progression: ['i', 'III', 'VII', 'iv'], chords: ['F#m', 'A', 'E', 'Bm'] },
+      { id: '18', title: 'Billie Jean', artist: 'Michael Jackson', genre: 'Pop/Funk', year: 1982, key: 'F# Minor', progression: ['i', 'VI', 'i', 'VI'], chords: ['F#m', 'D', 'F#m', 'D'] },
+      { id: '19', title: 'Boulevard of Broken Dreams', artist: 'Green Day', genre: 'Rock', year: 2004, key: 'F Minor', progression: ['i', 'VI', 'III', 'VII'], chords: ['Fm', 'Db', 'Ab', 'Eb'] },
+      { id: '20', title: 'I Got Rhythm', artist: 'George Gershwin', genre: 'Jazz', year: 1930, key: 'Bb Major', progression: ['I', 'vi', 'ii', 'V'], chords: ['Bb', 'Gm', 'Cm', 'F'] }
+    ];
+
+    let progression = ['I', 'V', 'vi', 'IV'];
+
+    // Web Audio Synthesizer
+    function playAudioTone(type) {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const freqMap = {
+          'I': [261.63, 329.63, 392.00],
+          'i': [261.63, 311.13, 392.00],
+          'ii': [293.66, 349.23, 440.00],
+          'iii': [329.63, 392.00, 493.88],
+          'III': [329.63, 415.30, 493.88],
+          'IV': [349.23, 440.00, 523.25],
+          'iv': [349.23, 415.30, 523.25],
+          'V': [392.00, 493.88, 587.33],
+          'v': [392.00, 466.16, 587.33],
+          'vi': [440.00, 523.25, 659.25],
+          'VI': [440.00, 554.37, 659.25],
+          'VII': [493.88, 622.25, 739.99]
+        };
+        const freqs = freqMap[type] || [261.63, 329.63, 392.00];
+        freqs.forEach(f => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.frequency.value = f;
+          gain.gain.setValueAtTime(0.08, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.9);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.9);
+        });
+      } catch (e) {
+        console.log("Audio play blocked by browser policy");
+      }
+    }
+
+    function addChord(numeral) {
+      progression.push(numeral);
+      playAudioTone(numeral);
+      render();
+    }
+
+    function clearProgression() {
+      progression = [];
+      render();
+    }
+
+    function render() {
+      const display = document.getElementById('progression-display');
+      if (progression.length === 0) {
+        display.innerHTML = `<span class="text-slate-600 text-sm italic">Tap chord buttons above to start matching...</span>`;
+      } else {
+        display.innerHTML = progression.map(n => `
+          <span class="px-3.5 py-1.5 bg-indigo-600 text-white font-mono font-bold text-sm rounded-lg shadow-md border border-indigo-400/30">
+            ${n}
+          </span>
+        `).join('');
+      }
+
+      // Filter matches
+      const matches = MUSIC_CATALOG.filter(piece => {
+        if (progression.length === 0) return true;
+        return piece.progression.join(',').includes(progression.join(','));
+      });
+
+      document.getElementById('results-count').innerText = matches.length;
+      
+      const resultsContainer = document.getElementById('results-list');
+      if (matches.length === 0) {
+        resultsContainer.innerHTML = `
+          <div class="p-8 text-center bg-slate-900/50 rounded-xl border border-slate-800 text-slate-500 text-sm">
+            No exact match found for this sequence yet. Try clearing or choosing a shorter progression!
+          </div>
+        `;
+      } else {
+        resultsContainer.innerHTML = matches.map(item => `
+          <div class="p-4 bg-slate-900 border border-slate-800/80 rounded-xl flex flex-col sm:flex-row justify-between sm:items-center gap-3 hover:border-slate-700 transition">
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="font-bold text-indigo-300 text-base">${item.title}</h3>
+                <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">${item.genre}</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">${item.artist} (${item.year})</p>
+              <p class="text-[11px] text-slate-500 mt-0.5">Key: <strong class="text-slate-400">${item.key}</strong> | Chords: <span class="text-slate-400">${item.chords.join(' – ')}</span></p>
+            </div>
+            <div class="flex flex-wrap gap-1 font-mono text-xs self-start sm:self-center">
+              ${item.progression.map(c => `<span class="px-2 py-1 bg-slate-950 text-indigo-400 font-semibold rounded border border-slate-800">${c}</span>`).join('')}
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    render();
+  </script>
+</body>
+  </html>
