@@ -16,6 +16,10 @@
       --danger: #f87171;
     }
 
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background-color: var(--bg-color);
@@ -247,26 +251,22 @@
         <button class="btn-action" id="btn-clear">Clear</button>
       </div>
 
-      <!-- Diatonic Chords -->
       <div class="chord-group">
         <label>Diatonic Chords</label>
         <div class="grid" id="diatonic-grid"></div>
       </div>
 
-      <!-- Extensions & Variations -->
       <div class="chord-group">
         <label>Extensions & Variations</label>
         <div class="grid" id="extension-grid"></div>
       </div>
 
-      <!-- Modal Interchange / Borrowed -->
       <div class="chord-group">
         <label>Borrowed Chords</label>
         <div class="grid" id="borrowed-grid"></div>
       </div>
     </div>
 
-    <!-- Matches Output -->
     <div class="card">
       <div class="matches-header">
         <h2 style="margin: 0;">Matching Music (<span id="match-count">0</span>)</h2>
@@ -278,223 +278,243 @@
   </div>
 
   <script>
-    const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const NOTE_ALIASES = { 'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#' };
+    (function () {
+      const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+      const NOTE_ALIASES = { 'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#' };
 
-    const CHORD_DEFINITIONS = {
-      'I':   { semitones: 0,  intervals: [0, 4, 7] },
-      'ii':  { semitones: 2,  intervals: [0, 3, 7] },
-      'iii': { semitones: 4,  intervals: [0, 3, 7] },
-      'IV':  { semitones: 5,  intervals: [0, 4, 7] },
-      'V':   { semitones: 7,  intervals: [0, 4, 7] },
-      'vi':  { semitones: 9,  intervals: [0, 3, 7] },
-      'vii°':{ semitones: 11, intervals: [0, 3, 6] },
-      'Imaj7':{ semitones: 0, intervals: [0, 4, 7, 11] },
-      'V7':   { semitones: 7, intervals: [0, 4, 7, 10] },
-      'vi7':  { semitones: 9, intervals: [0, 3, 7, 10] },
-      'iv':   { semitones: 5, intervals: [0, 3, 7] },
-      'bVI':  { semitones: 8, intervals: [0, 4, 7] },
-      'bVII': { semitones: 10, intervals: [0, 4, 7] }
-    };
+      const CHORD_DEFINITIONS = {
+        'I':   { semitones: 0,  intervals: [0, 4, 7] },
+        'ii':  { semitones: 2,  intervals: [0, 3, 7] },
+        'iii': { semitones: 4,  intervals: [0, 3, 7] },
+        'IV':  { semitones: 5,  intervals: [0, 4, 7] },
+        'V':   { semitones: 7,  intervals: [0, 4, 7] },
+        'vi':  { semitones: 9,  intervals: [0, 3, 7] },
+        'vii°':{ semitones: 11, intervals: [0, 3, 6] },
+        'Imaj7':{ semitones: 0, intervals: [0, 4, 7, 11] },
+        'V7':   { semitones: 7, intervals: [0, 4, 7, 10] },
+        'vi7':  { semitones: 9, intervals: [0, 3, 7, 10] },
+        'iv':   { semitones: 5, intervals: [0, 3, 7] },
+        'bVI':  { semitones: 8, intervals: [0, 4, 7] },
+        'bVII': { semitones: 10, intervals: [0, 4, 7] }
+      };
 
-    const CHORD_GROUPS = {
-      diatonic: ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'],
-      extension: ['Imaj7', 'V7', 'vi7'],
-      borrowed: ['iv', 'bVI', 'bVII']
-    };
+      const CHORD_GROUPS = {
+        diatonic: ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'],
+        extension: ['Imaj7', 'V7', 'vi7'],
+        borrowed: ['iv', 'bVI', 'bVII']
+      };
 
-    // Expanded Verified Database (Pop, Rock, Classical, Film)
-    const SONG_DATABASE = [
-      // Classical & Traditional
-      { title: "Canon in D", artist: "Johann Pachelbel", genre: "classical", progression: ['I', 'V', 'vi', 'iii', 'IV', 'I', 'IV', 'V'] },
-      { title: "Symphony No. 9 (Ode to Joy)", artist: "Ludwig van Beethoven", genre: "classical", progression: ['I', 'V', 'I', 'V'] },
-      { title: "Air on the G String", artist: "J.S. Bach", genre: "classical", progression: ['I', 'V', 'vi', 'iii', 'IV'] },
-      { title: "Clair de Lune", artist: "Claude Debussy", genre: "classical", progression: ['I', 'IV', 'Imaj7'] },
-      { title: "Prelude in C Major (BWV 846)", artist: "J.S. Bach", genre: "classical", progression: ['I', 'ii', 'V7', 'I'] },
+      const SONG_DATABASE = [
+        { title: "Canon in D", artist: "Johann Pachelbel", genre: "classical", progression: ['I', 'V', 'vi', 'iii', 'IV', 'I', 'IV', 'V'] },
+        { title: "Symphony No. 9 (Ode to Joy)", artist: "Ludwig van Beethoven", genre: "classical", progression: ['I', 'V', 'I', 'V'] },
+        { title: "Air on the G String", artist: "J.S. Bach", genre: "classical", progression: ['I', 'V', 'vi', 'iii', 'IV'] },
+        { title: "Clair de Lune", artist: "Claude Debussy", genre: "classical", progression: ['I', 'IV', 'Imaj7'] },
+        { title: "Prelude in C Major (BWV 846)", artist: "J.S. Bach", genre: "classical", progression: ['I', 'ii', 'V7', 'I'] },
+        { title: "Let It Be", artist: "The Beatles", genre: "pop", progression: ['I', 'V', 'vi', 'IV'] },
+        { title: "Don't Stop Believin'", artist: "Journey", genre: "rock", progression: ['I', 'V', 'vi', 'IV'] },
+        { title: "No Woman, No Cry", artist: "Bob Marley", genre: "reggae", progression: ['I', 'V', 'vi', 'IV'] },
+        { title: "With or Without You", artist: "U2", genre: "rock", progression: ['I', 'V', 'vi', 'IV'] },
+        { title: "Someone Like You", artist: "Adele", genre: "pop", progression: ['I', 'V', 'vi', 'IV'] },
+        { title: "Where Is the Love?", artist: "The Black Eyed Peas", genre: "pop", progression: ['I', 'V', 'vi', 'IV'] },
+        { title: "Can You Feel the Love Tonight", artist: "Elton John", genre: "film score", progression: ['I', 'V', 'vi', 'IV'] },
+        { title: "Complicated", artist: "Avril Lavigne", genre: "pop", progression: ['vi', 'IV', 'I', 'V'] },
+        { title: "Grenade", artist: "Bruno Mars", genre: "pop", progression: ['vi', 'IV', 'I', 'V'] },
+        { title: "Poker Face", artist: "Lady Gaga", genre: "pop", progression: ['vi', 'IV', 'I', 'V'] },
+        { title: "Despacito", artist: "Luis Fonsi ft. Daddy Yankee", genre: "pop", progression: ['vi', 'IV', 'I', 'V'] },
+        { title: "Hello", artist: "Adele", genre: "pop", progression: ['vi', 'IV', 'I', 'V'] },
+        { title: "Stand by Me", artist: "Ben E. King", genre: "r&b", progression: ['I', 'vi', 'IV', 'V'] },
+        { title: "Every Breath You Take", artist: "The Police", genre: "rock", progression: ['I', 'vi', 'IV', 'V'] },
+        { title: "Earth Angel", artist: "The Penguins", genre: "doo-wop", progression: ['I', 'vi', 'IV', 'V'] },
+        { title: "Unchained Melody", artist: "The Righteous Brothers", genre: "pop", progression: ['I', 'vi', 'IV', 'V'] },
+        { title: "Creep", artist: "Radiohead", genre: "alternative", progression: ['I', 'iii', 'IV', 'iv'] },
+        { title: "Sweet Home Alabama", artist: "Lynyrd Skynyrd", genre: "rock", progression: ['V', 'IV', 'I'] },
+        { title: "Wonderwall", artist: "Oasis", genre: "britpop", progression: ['vi', 'bVII', 'IV', 'I'] },
+        { title: "Hey Jude", artist: "The Beatles", genre: "rock", progression: ['I', 'V', 'V7', 'I', 'IV', 'I', 'V', 'I'] },
+        { title: "Autumn Leaves", artist: "Joseph Kosma / Jazz Standard", genre: "jazz", progression: ['ii', 'V7', 'Imaj7', 'IV'] },
+        { title: "Fly Me to the Moon", artist: "Frank Sinatra", genre: "jazz", progression: ['vi', 'ii', 'V7', 'Imaj7'] },
+        { title: "Sunday Morning", artist: "Maroon 5", genre: "pop", progression: ['ii', 'V', 'I'] }
+      ];
 
-      // Pop & Rock (I–V–vi–IV Axis of Awesome variations)
-      { title: "Let It Be", artist: "The Beatles", genre: "pop", progression: ['I', 'V', 'vi', 'IV'] },
-      { title: "Don't Stop Believin'", artist: "Journey", genre: "rock", progression: ['I', 'V', 'vi', 'IV'] },
-      { title: "No Woman, No Cry", artist: "Bob Marley", genre: "reggae", progression: ['I', 'V', 'vi', 'IV'] },
-      { title: "With or Without You", artist: "U2", genre: "rock", progression: ['I', 'V', 'vi', 'IV'] },
-      { title: "Someone Like You", artist: "Adele", genre: "pop", progression: ['I', 'V', 'vi', 'IV'] },
-      { title: "Where Is the Love?", artist: "The Black Eyed Peas", genre: "pop", progression: ['I', 'V', 'vi', 'IV'] },
-      { title: "Can You Feel the Love Tonight", artist: "Elton John", genre: "film score", progression: ['I', 'V', 'vi', 'IV'] },
+      let currentKey = 'C';
+      let activeProgression = [];
 
-      // Pop (vi–IV–I–V Sensitive Female Chord Progression)
-      { title: "Complicated", artist: "Avril Lavigne", genre: "pop", progression: ['vi', 'IV', 'I', 'V'] },
-      { title: "Grenade", artist: "Bruno Mars", genre: "pop", progression: ['vi', 'IV', 'I', 'V'] },
-      { title: "Poker Face", artist: "Lady Gaga", genre: "pop", progression: ['vi', 'IV', 'I', 'V'] },
-      { title: "Despacito", artist: "Luis Fonsi ft. Daddy Yankee", genre: "pop", progression: ['vi', 'IV', 'I', 'V'] },
-      { title: "Hello", artist: "Adele", genre: "pop", progression: ['vi', 'IV', 'I', 'V'] },
+      let audioCtx = null;
 
-      // 50s / Doo-Wop (I–vi–IV–V)
-      { title: "Stand by Me", artist: "Ben E. King", genre: "r&b", progression: ['I', 'vi', 'IV', 'V'] },
-      { title: "Every Breath You Take", artist: "The Police", genre: "rock", progression: ['I', 'vi', 'IV', 'V'] },
-      { title: "Earth Angel", artist: "The Penguins", genre: "doo-wop", progression: ['I', 'vi', 'IV', 'V'] },
-      { title: "Unchained Melody", artist: "The Righteous Brothers", genre: "pop", progression: ['I', 'vi', 'IV', 'V'] },
-
-      // Rock & Alternative (I–bVII–IV Andalusian / Borrowed Variations)
-      { title: "Creep", artist: "Radiohead", genre: "alternative", progression: ['I', 'iii', 'IV', 'iv'] },
-      { title: "Sweet Home Alabama", artist: "Lynyrd Skynyrd", genre: "rock", progression: ['V', 'IV', 'I'] },
-      { title: "Wonderwall", artist: "Oasis", genre: "britpop", progression: ['vi', 'bVII', 'IV', 'I'] },
-      { title: "Hey Jude", artist: "The Beatles", genre: "rock", progression: ['I', 'V', 'V7', 'I', 'IV', 'I', 'V', 'I'] },
-
-      // Jazz & Standards (ii–V–I)
-      { title: "Autumn Leaves", artist: "Joseph Kosma / Jazz Standard", genre: "jazz", progression: ['ii', 'V7', 'Imaj7', 'IV'] },
-      { title: "Fly Me to the Moon", artist: "Frank Sinatra", genre: "jazz", progression: ['vi', 'ii', 'V7', 'Imaj7'] },
-      { title: "Sunday Morning", artist: "Maroon 5", genre: "pop", progression: ['ii', 'V', 'I'] }
-    ];
-
-    let currentKey = 'C';
-    let activeProgression = [];
-
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    const audioCtx = new AudioContext();
-
-    function getRootNoteIndex(keyStr) {
-      const cleanKey = NOTE_ALIASES[keyStr] || keyStr;
-      return NOTES.indexOf(cleanKey);
-    }
-
-    function getAbsoluteChordName(roman, key) {
-      const rootIndex = getRootNoteIndex(key);
-      const semitones = CHORD_DEFINITIONS[roman].semitones;
-      const noteIndex = (rootIndex + semitones) % 12;
-      return NOTES[noteIndex];
-    }
-
-    function playChordAudio(roman) {
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
+      function getAudioContext() {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          audioCtx = new AudioContextClass();
+        }
+        return audioCtx;
       }
 
-      const rootIndex = getRootNoteIndex(currentKey);
-      const chordDef = CHORD_DEFINITIONS[roman];
-      const baseMidi = 60 + ((rootIndex + chordDef.semitones) % 12);
+      function getRootNoteIndex(keyStr) {
+        const cleanKey = NOTE_ALIASES[keyStr] || keyStr;
+        return NOTES.indexOf(cleanKey);
+      }
 
-      chordDef.intervals.forEach(interval => {
-        const midiNote = baseMidi + interval;
-        const freq = 440 * Math.pow(2, (midiNote - 69) / 12);
-        
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        
-        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
-        
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        
-        osc.start();
-        osc.stop(audioCtx.currentTime + 1.2);
-      });
-    }
+      function getAbsoluteChordName(roman, key) {
+        const rootIndex = getRootNoteIndex(key);
+        const semitones = CHORD_DEFINITIONS[roman].semitones;
+        const noteIndex = (rootIndex + semitones) % 12;
+        return NOTES[noteIndex];
+      }
 
-    function removeChordAt(index) {
-      activeProgression.splice(index, 1);
-      updateUI();
-    }
+      function playChordAudio(roman) {
+        const ctx = getAudioContext();
+        if (ctx.state === 'suspended') {
+          ctx.resume();
+        }
 
-    function renderButtons() {
-      Object.keys(CHORD_GROUPS).forEach(groupKey => {
-        const container = document.getElementById(`${groupKey}-grid`);
-        container.innerHTML = '';
-        
-        CHORD_GROUPS[groupKey].forEach(roman => {
-          const btn = document.createElement('button');
-          btn.className = 'btn-chord';
-          const absoluteName = getAbsoluteChordName(roman, currentKey);
+        const rootIndex = getRootNoteIndex(currentKey);
+        const chordDef = CHORD_DEFINITIONS[roman];
+        const baseMidi = 60 + ((rootIndex + chordDef.semitones) % 12);
+
+        chordDef.intervals.forEach(interval => {
+          const midiNote = baseMidi + interval;
+          const freq = 440 * Math.pow(2, (midiNote - 69) / 12);
           
-          btn.innerHTML = `${roman} <span>${absoluteName}</span>`;
-          btn.onclick = () => {
-            playChordAudio(roman);
-            activeProgression.push(roman);
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime);
+          
+          gain.gain.setValueAtTime(0.15, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
+          
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          
+          osc.start();
+          osc.stop(ctx.currentTime + 1.2);
+        });
+      }
+
+      function removeChordAt(index) {
+        activeProgression.splice(index, 1);
+        updateUI();
+      }
+
+      function renderButtons() {
+        Object.keys(CHORD_GROUPS).forEach(groupKey => {
+          const container = document.getElementById(`${groupKey}-grid`);
+          if (!container) return;
+          
+          // Strict DOM reset prevents duplicate button rows
+          container.textContent = '';
+          
+          CHORD_GROUPS[groupKey].forEach(roman => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-chord';
+            const absoluteName = getAbsoluteChordName(roman, currentKey);
+            
+            btn.innerHTML = `${roman} <span>${absoluteName}</span>`;
+            btn.onclick = () => {
+              playChordAudio(roman);
+              activeProgression.push(roman);
+              updateUI();
+            };
+            container.appendChild(btn);
+          });
+        });
+      }
+
+      function updateUI() {
+        const display = document.getElementById('progression-display');
+        if (!display) return;
+        
+        display.textContent = '';
+
+        if (activeProgression.length === 0) {
+          display.innerHTML = `<span style="color: var(--text-muted);">Click chords below to build a progression...</span>`;
+        } else {
+          activeProgression.forEach((roman, index) => {
+            const tag = document.createElement('div');
+            tag.className = 'chord-tag';
+            tag.title = 'Click to remove';
+            tag.innerHTML = `${roman} <span>(${getAbsoluteChordName(roman, currentKey)})</span> ×`;
+            tag.onclick = () => removeChordAt(index);
+            display.appendChild(tag);
+          });
+        }
+
+        findMatches();
+      }
+
+      function findMatches() {
+        const matchesContainer = document.getElementById('matches-list');
+        const matchCount = document.getElementById('match-count');
+        if (!matchesContainer || !matchCount) return;
+        
+        if (activeProgression.length === 0) {
+          matchesContainer.innerHTML = `<p style="color: var(--text-muted);">No matching songs found for this sequence yet.</p>`;
+          matchCount.innerText = '0';
+          return;
+        }
+
+        const userSeq = activeProgression.join(',');
+
+        const matches = SONG_DATABASE.filter(song => {
+          const doubleSongSeq = song.progression.concat(song.progression).join(',');
+          return doubleSongSeq.includes(userSeq);
+        });
+
+        matchCount.innerText = matches.length;
+
+        if (matches.length === 0) {
+          matchesContainer.innerHTML = `<p style="color: var(--text-muted);">No verified matches found for this specific sequence.</p>`;
+        } else {
+          matchesContainer.innerHTML = matches.map(song => `
+            <div class="match-item">
+              <div>
+                <div class="match-title">${song.title}</div>
+                <div class="match-meta">${song.artist} — [ Progression: ${song.progression.join(' - ')} ]</div>
+              </div>
+              <span class="genre-badge">${song.genre}</span>
+            </div>
+          `).join('');
+        }
+      }
+
+      function init() {
+        const keySelect = document.getElementById('key-select');
+        const btnClear = document.getElementById('btn-clear');
+        const btnPlay = document.getElementById('btn-play');
+
+        if (keySelect) {
+          keySelect.onchange = (e) => {
+            currentKey = e.target.value;
+            renderButtons();
             updateUI();
           };
-          container.appendChild(btn);
-        });
-      });
-    }
+        }
 
-    function updateUI() {
-      const display = document.getElementById('progression-display');
-      display.innerHTML = '';
+        if (btnClear) {
+          btnClear.onclick = () => {
+            activeProgression = [];
+            updateUI();
+          };
+        }
 
-      if (activeProgression.length === 0) {
-        display.innerHTML = `<span style="color: var(--text-muted);">Click chords below to build a progression...</span>`;
+        if (btnPlay) {
+          btnPlay.onclick = () => {
+            activeProgression.forEach((roman, index) => {
+              setTimeout(() => playChordAudio(roman), index * 600);
+            });
+          };
+        }
+
+        renderButtons();
+        updateUI();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
       } else {
-        activeProgression.forEach((roman, index) => {
-          const tag = document.createElement('div');
-          tag.className = 'chord-tag';
-          tag.title = 'Click to remove';
-          tag.innerHTML = `${roman} <span>(${getAbsoluteChordName(roman, currentKey)})</span> ×`;
-          tag.onclick = () => removeChordAt(index);
-          display.appendChild(tag);
-        });
+        init();
       }
-
-      findMatches();
-    }
-
-    // Sub-sequence Matcher (finds progressions embedded in longer sequences)
-    function findMatches() {
-      const matchesContainer = document.getElementById('matches-list');
-      const matchCount = document.getElementById('match-count');
-      
-      if (activeProgression.length === 0) {
-        matchesContainer.innerHTML = `<p style="color: var(--text-muted);">No matching songs found for this sequence yet.</p>`;
-        matchCount.innerText = '0';
-        return;
-      }
-
-      const userSeq = activeProgression.join(',');
-
-      const matches = SONG_DATABASE.filter(song => {
-        const songSeq = song.progression.join(',');
-        // Matches exact sequence or looping sequence
-        const doubleSongSeq = song.progression.concat(song.progression).join(',');
-        return doubleSongSeq.includes(userSeq);
-      });
-
-      matchCount.innerText = matches.length;
-
-      if (matches.length === 0) {
-        matchesContainer.innerHTML = `<p style="color: var(--text-muted);">No verified matches found for this specific sequence.</p>`;
-      } else {
-        matchesContainer.innerHTML = matches.map(song => `
-          <div class="match-item">
-            <div>
-              <div class="match-title">${song.title}</div>
-              <div class="match-meta">${song.artist} — [ Progression: ${song.progression.join(' - ')} ]</div>
-            </div>
-            <span class="genre-badge">${song.genre}</span>
-          </div>
-        `).join('');
-      }
-    }
-
-    document.getElementById('key-select').onchange = (e) => {
-      currentKey = e.target.value;
-      renderButtons();
-      updateUI();
-    };
-
-    document.getElementById('btn-clear').onclick = () => {
-      activeProgression = [];
-      updateUI();
-    };
-
-    document.getElementById('btn-play').onclick = () => {
-      activeProgression.forEach((roman, index) => {
-        setTimeout(() => playChordAudio(roman), index * 600);
-      });
-    };
-
-    renderButtons();
+    })();
   </script>
 </body>
 </html>
