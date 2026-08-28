@@ -1,180 +1,999 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Music Matcher</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --danger: #f87171;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      max-width: 850px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    header {
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2.2rem;
+      color: var(--accent);
+    }
+
+    header p {
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    select {
+      background: var(--bg-color);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .progression-display {
+      min-height: 50px;
+      background: var(--bg-color);
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .chord-tag {
+      background: var(--accent);
+      color: #000;
+      font-weight: bold;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+    }
+
+    .chord-tag:hover {
+      background: var(--danger);
+      color: #ffffff;
+    }
+
+    .chord-tag span {
+      font-size: 0.8rem;
+      opacity: 0.75;
+    }
+
+    .chord-group {
+      margin-top: 1rem;
+    }
+
+    .chord-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 0.5rem;
+    }
+
+    button.btn-chord {
+      background: var(--bg-color);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 0.75rem 0.5rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    button.btn-chord:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    button.btn-chord span {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .btn-action {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .btn-action:hover {
+      color: var(--text-main);
+      border-color: var(--text-main);
+    }
+
+    .matches-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .match-item {
+      padding: 0.85rem 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .match-item:last-child {
+      border-bottom: none;
+    }
+
+    .match-title {
+      font-weight: bold;
+      font-size: 1.05rem;
+    }
+
+    .match-meta {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+
+    .genre-badge {
+      background: var(--bg-color);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      font-size: 0.75rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      text-transform: capitalize;
+    }
+  </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-10 font-sans">
-  <div class="max-w-3xl mx-auto space-y-6">
-    
-    <!-- Header -->
-    <header class="text-center space-y-2">
-      <h1 class="text-4xl md:text-5xl font-black text-indigo-400 tracking-tight">Music Matcher</h1>
-      <p class="text-slate-400 text-sm md:text-base">Match chord progressions across classical, pop, rock, and film scores.</p>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Music Matcher</h1>
+      <p>Analyze chord progressions across classical, pop, rock, and film scores.</p>
     </header>
 
-    <!-- Builder Card -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-2xl">
-      <div class="flex justify-between items-center">
-        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Active Progression:</span>
-        <button onclick="clearProgression()" class="text-xs text-rose-400 hover:text-rose-300 font-medium">Clear All</button>
+    <div class="card">
+      <div class="controls-row">
+        <label for="key-select"><strong>Selected Key:</strong></label>
+        <select id="key-select">
+          <option value="C">C Major</option>
+          <option value="G">G Major</option>
+          <option value="D">D Major</option>
+          <option value="A">A Major</option>
+          <option value="E">E Major</option>
+          <option value="F">F Major</option>
+          <option value="Bb">Bb Major</option>
+          <option value="Eb">Eb Major</option>
+        </select>
       </div>
 
-      <!-- Selected Chords Bar -->
-      <div id="progression-display" class="flex gap-2 min-h-[56px] items-center p-3 bg-slate-950 rounded-xl border border-slate-800 overflow-x-auto"></div>
+      <div class="progression-display" id="progression-display">
+        <span style="color: var(--text-muted);">Click chords below to build a progression...</span>
+      </div>
 
-      <!-- Chord Selector Buttons -->
-      <div class="grid grid-cols-4 sm:grid-cols-6 gap-2 pt-2">
-        <button onclick="addChord('I')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-indigo-300 shadow">I</button>
-        <button onclick="addChord('i')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-indigo-300 shadow">i</button>
-        <button onclick="addChord('ii')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-slate-200 shadow">ii</button>
-        <button onclick="addChord('iii')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-slate-200 shadow">iii</button>
-        <button onclick="addChord('III')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-slate-200 shadow">III</button>
-        <button onclick="addChord('IV')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-indigo-300 shadow">IV</button>
-        <button onclick="addChord('iv')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-slate-200 shadow">iv</button>
-        <button onclick="addChord('V')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-indigo-300 shadow">V</button>
-        <button onclick="addChord('v')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-slate-200 shadow">v</button>
-        <button onclick="addChord('vi')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-indigo-300 shadow">vi</button>
-        <button onclick="addChord('VI')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-slate-200 shadow">VI</button>
-        <button onclick="addChord('VII')" class="py-3 bg-slate-800 active:bg-indigo-600 hover:bg-slate-700 transition rounded-xl font-mono font-bold text-base text-slate-200 shadow">VII</button>
+      <div class="actions">
+        <button class="btn-action" id="btn-play">▶ Play Sequence</button>
+        <button class="btn-action" id="btn-clear">Clear</button>
+      </div>
+
+      <!-- Diatonic Chords -->
+      <div class="chord-group">
+        <label>Diatonic Chords</label>
+        <div class="grid" id="diatonic-grid"></div>
+      </div>
+
+      <!-- Extensions & Variations -->
+      <div class="chord-group">
+        <label>Extensions & Variations</label>
+        <div class="grid" id="extension-grid"></div>
+      </div>
+
+      <!-- Modal Interchange / Borrowed -->
+      <div class="chord-group">
+        <label>Borrowed Chords</label>
+        <div class="grid" id="borrowed-grid"></div>
       </div>
     </div>
 
-    <!-- Results Section -->
-    <section class="space-y-4">
-      <div class="flex justify-between items-center px-1">
-        <h2 class="text-lg font-bold text-slate-200">Matching Music</h2>
-        <span class="text-xs bg-indigo-900/60 text-indigo-300 px-3 py-1 rounded-full font-semibold border border-indigo-700/50">
-          <span id="results-count">0</span> matches found
-        </span>
+    <!-- Matches Output -->
+    <div class="card">
+      <div class="matches-header">
+        <h2 style="margin: 0;">Matching Music (<span id="match-count">0</span>)</h2>
       </div>
-      <div id="results-list" class="space-y-3"></div>
-    </section>
-
+      <div id="matches-list">
+        <p style="color: var(--text-muted);">No matching songs found for this sequence yet.</p>
+      </div>
+    </div>
   </div>
 
   <script>
-    // Expanded Catalog Across Genres
-    const MUSIC_CATALOG = [
-      { id: '1', title: 'Symphony No. 5 in C Minor', artist: 'Ludwig van Beethoven', genre: 'Classical', year: 1808, key: 'C Minor', progression: ['i', 'VII', 'VI', 'V'], chords: ['Cm', 'Bb', 'Ab', 'G'] },
-      { id: '2', title: 'Canon in D', artist: 'Johann Pachelbel', genre: 'Classical', year: 1680, key: 'D Major', progression: ['I', 'V', 'vi', 'iii', 'IV', 'I', 'IV', 'V'], chords: ['D', 'A', 'Bm', 'F#m', 'G', 'D', 'G', 'A'] },
-      { id: '3', title: 'Let It Be', artist: 'The Beatles', genre: 'Pop', year: 1970, key: 'C Major', progression: ['I', 'V', 'vi', 'IV'], chords: ['C', 'G', 'Am', 'F'] },
-      { id: '4', title: 'No Woman, No Cry', artist: 'Bob Marley', genre: 'Reggae', year: 1974, key: 'C Major', progression: ['I', 'V', 'vi', 'IV'], chords: ['C', 'G', 'Am', 'F'] },
-      { id: '5', title: 'Hotel California', artist: 'Eagles', genre: 'Rock', year: 1977, key: 'B Minor', progression: ['i', 'VII', 'VI', 'V'], chords: ['Bm', 'A', 'G', 'F#'] },
-      { id: '6', title: "Don't Stop Believin'", artist: 'Journey', genre: 'Rock', year: 1981, key: 'E Major', progression: ['I', 'V', 'vi', 'IV'], chords: ['E', 'B', 'C#m', 'A'] },
-      { id: '7', title: 'Winter (The Four Seasons)', artist: 'Antonio Vivaldi', genre: 'Classical', year: 1723, key: 'F Minor', progression: ['i', 'VII', 'VI', 'V'], chords: ['Fm', 'Eb', 'Db', 'C'] },
-      { id: '8', title: 'Someone Like You', artist: 'Adele', genre: 'Pop', year: 2011, key: 'A Major', progression: ['I', 'V', 'vi', 'IV'], chords: ['A', 'E', 'F#m', 'D'] },
-      { id: '9', title: 'Creep', artist: 'Radiohead', genre: 'Alternative', year: 1992, key: 'G Major', progression: ['I', 'III', 'IV', 'iv'], chords: ['G', 'B', 'C', 'Cm'] },
-      { id: '10', title: 'Africa', artist: 'Toto', genre: 'Pop/Rock', year: 1982, key: 'F# Minor', progression: ['vi', 'IV', 'I', 'V'], chords: ['F#m', 'D', 'A', 'E'] },
-      { id: '11', title: 'Time (Inception Soundtrack)', artist: 'Hans Zimmer', genre: 'Film Score', year: 2010, key: 'A Minor', progression: ['vi', 'IV', 'I', 'V'], chords: ['Am', 'F', 'C', 'G'] },
-      { id: '12', title: 'Despacito', artist: 'Luis Fonsi', genre: 'Latin Pop', year: 2017, key: 'B Minor', progression: ['vi', 'IV', 'I', 'V'], chords: ['Bm', 'G', 'D', 'A'] },
-      { id: '13', title: 'House of the Rising Sun', artist: 'The Animals', genre: 'Folk Rock', year: 1964, key: 'A Minor', progression: ['i', 'III', 'IV', 'VI'], chords: ['Am', 'C', 'D', 'F'] },
-      { id: '14', title: 'Prelude in C Major (BWV 846)', artist: 'J.S. Bach', genre: 'Classical', year: 1722, key: 'C Major', progression: ['I', 'ii', 'V', 'I'], chords: ['C', 'Dm', 'G', 'C'] },
-      { id: '15', title: 'Love Story', artist: 'Taylor Swift', genre: 'Pop', year: 2008, key: 'D Major', progression: ['I', 'V', 'vi', 'IV'], chords: ['D', 'A', 'Bm', 'G'] },
-      { id: '16', title: 'Piano Sonata No. 16 in C', artist: 'W.A. Mozart', genre: 'Classical', year: 1788, key: 'C Major', progression: ['I', 'V', 'I', 'IV', 'I', 'V'], chords: ['C', 'G', 'C', 'F', 'C', 'G'] },
-      { id: '17', title: 'Wonderwall', artist: 'Oasis', genre: 'Britpop', year: 1995, key: 'F# Minor', progression: ['i', 'III', 'VII', 'iv'], chords: ['F#m', 'A', 'E', 'Bm'] },
-      { id: '18', title: 'Billie Jean', artist: 'Michael Jackson', genre: 'Pop/Funk', year: 1982, key: 'F# Minor', progression: ['i', 'VI', 'i', 'VI'], chords: ['F#m', 'D', 'F#m', 'D'] },
-      { id: '19', title: 'Boulevard of Broken Dreams', artist: 'Green Day', genre: 'Rock', year: 2004, key: 'F Minor', progression: ['i', 'VI', 'III', 'VII'], chords: ['Fm', 'Db', 'Ab', 'Eb'] },
-      { id: '20', title: 'I Got Rhythm', artist: 'George Gershwin', genre: 'Jazz', year: 1930, key: 'Bb Major', progression: ['I', 'vi', 'ii', 'V'], chords: ['Bb', 'Gm', 'Cm', 'F'] }
+    const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const NOTE_ALIASES = { 'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#' };
+
+    const CHORD_DEFINITIONS = {
+      'I':   { semitones: 0,  intervals: [0, 4, 7] },
+      'ii':  { semitones: 2,  intervals: [0, 3, 7] },
+      'iii': { semitones: 4,  intervals: [0, 3, 7] },
+      'IV':  { semitones: 5,  intervals: [0, 4, 7] },
+      'V':   { semitones: 7,  intervals: [0, 4, 7] },
+      'vi':  { semitones: 9,  intervals: [0, 3, 7] },
+      'vii°':{ semitones: 11, intervals: [0, 3, 6] },
+      'Imaj7':{ semitones: 0, intervals: [0, 4, 7, 11] },
+      'V7':   { semitones: 7, intervals: [0, 4, 7, 10] },
+      'vi7':  { semitones: 9, intervals: [0, 3, 7, 10] },
+      'iv':   { semitones: 5, intervals: [0, 3, 7] },
+      'bVI':  { semitones: 8, intervals: [0, 4, 7] },
+      'bVII': { semitones: 10, intervals: [0, 4, 7] }
+    };
+
+    const CHORD_GROUPS = {
+      diatonic: ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'],
+      extension: ['Imaj7', 'V7', 'vi7'],
+      borrowed: ['iv', 'bVI', 'bVII']
+    };
+
+    // Expanded Verified Database (Pop, Rock, Classical, Film)
+    const SONG_DATABASE = [
+      // Classical & Traditional
+      { title: "Canon in D", artist: "Johann Pachelbel", genre: "classical", progression: ['I', 'V', 'vi', 'iii', 'IV', 'I', 'IV', 'V'] },
+      { title: "Symphony No. 9 (Ode to Joy)", artist: "Ludwig van Beethoven", genre: "classical", progression: ['I', 'V', 'I', 'V'] },
+      { title: "Air on the G String", artist: "J.S. Bach", genre: "classical", progression: ['I', 'V', 'vi', 'iii', 'IV'] },
+      { title: "Clair de Lune", artist: "Claude Debussy", genre: "classical", progression: ['I', 'IV', 'Imaj7'] },
+      { title: "Prelude in C Major (BWV 846)", artist: "J.S. Bach", genre: "classical", progression: ['I', 'ii', 'V7', 'I'] },
+
+      // Pop & Rock (I–V–vi–IV Axis of Awesome variations)
+      { title: "Let It Be", artist: "The Beatles", genre: "pop", progression: ['I', 'V', 'vi', 'IV'] },
+      { title: "Don't Stop Believin'", artist: "Journey", genre: "rock", progression: ['I', 'V', 'vi', 'IV'] },
+      { title: "No Woman, No Cry", artist: "Bob Marley", genre: "reggae", progression: ['I', 'V', 'vi', 'IV'] },
+      { title: "With or Without You", artist: "U2", genre: "rock", progression: ['I', 'V', 'vi', 'IV'] },
+      { title: "Someone Like You", artist: "Adele", genre: "pop", progression: ['I', 'V', 'vi', 'IV'] },
+      { title: "Where Is the Love?", artist: "The Black Eyed Peas", genre: "pop", progression: ['I', 'V', 'vi', 'IV'] },
+      { title: "Can You Feel the Love Tonight", artist: "Elton John", genre: "film score", progression: ['I', 'V', 'vi', 'IV'] },
+
+      // Pop (vi–IV–I–V Sensitive Female Chord Progression)
+      { title: "Complicated", artist: "Avril Lavigne", genre: "pop", progression: ['vi', 'IV', 'I', 'V'] },
+      { title: "Grenade", artist: "Bruno Mars", genre: "pop", progression: ['vi', 'IV', 'I', 'V'] },
+      { title: "Poker Face", artist: "Lady Gaga", genre: "pop", progression: ['vi', 'IV', 'I', 'V'] },
+      { title: "Despacito", artist: "Luis Fonsi ft. Daddy Yankee", genre: "pop", progression: ['vi', 'IV', 'I', 'V'] },
+      { title: "Hello", artist: "Adele", genre: "pop", progression: ['vi', 'IV', 'I', 'V'] },
+
+      // 50s / Doo-Wop (I–vi–IV–V)
+      { title: "Stand by Me", artist: "Ben E. King", genre: "r&b", progression: ['I', 'vi', 'IV', 'V'] },
+      { title: "Every Breath You Take", artist: "The Police", genre: "rock", progression: ['I', 'vi', 'IV', 'V'] },
+      { title: "Earth Angel", artist: "The Penguins", genre: "doo-wop", progression: ['I', 'vi', 'IV', 'V'] },
+      { title: "Unchained Melody", artist: "The Righteous Brothers", genre: "pop", progression: ['I', 'vi', 'IV', 'V'] },
+
+      // Rock & Alternative (I–bVII–IV Andalusian / Borrowed Variations)
+      { title: "Creep", artist: "Radiohead", genre: "alternative", progression: ['I', 'iii', 'IV', 'iv'] },
+      { title: "Sweet Home Alabama", artist: "Lynyrd Skynyrd", genre: "rock", progression: ['V', 'IV', 'I'] },
+      { title: "Wonderwall", artist: "Oasis", genre: "britpop", progression: ['vi', 'bVII', 'IV', 'I'] },
+      { title: "Hey Jude", artist: "The Beatles", genre: "rock", progression: ['I', 'V', 'V7', 'I', 'IV', 'I', 'V', 'I'] },
+
+      // Jazz & Standards (ii–V–I)
+      { title: "Autumn Leaves", artist: "Joseph Kosma / Jazz Standard", genre: "jazz", progression: ['ii', 'V7', 'Imaj7', 'IV'] },
+      { title: "Fly Me to the Moon", artist: "Frank Sinatra", genre: "jazz", progression: ['vi', 'ii', 'V7', 'Imaj7'] },
+      { title: "Sunday Morning", artist: "Maroon 5", genre: "pop", progression: ['ii', 'V', 'I'] }
     ];
 
-    let progression = ['I', 'V', 'vi', 'IV'];
+    let currentKey = 'C';
+    let activeProgression = [];
 
-    // Web Audio Synthesizer
-    function playAudioTone(type) {
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const freqMap = {
-          'I': [261.63, 329.63, 392.00],
-          'i': [261.63, 311.13, 392.00],
-          'ii': [293.66, 349.23, 440.00],
-          'iii': [329.63, 392.00, 493.88],
-          'III': [329.63, 415.30, 493.88],
-          'IV': [349.23, 440.00, 523.25],
-          'iv': [349.23, 415.30, 523.25],
-          'V': [392.00, 493.88, 587.33],
-          'v': [392.00, 466.16, 587.33],
-          'vi': [440.00, 523.25, 659.25],
-          'VI': [440.00, 554.37, 659.25],
-          'VII': [493.88, 622.25, 739.99]
-        };
-        const freqs = freqMap[type] || [261.63, 329.63, 392.00];
-        freqs.forEach(f => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.frequency.value = f;
-          gain.gain.setValueAtTime(0.08, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.9);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start();
-          osc.stop(ctx.currentTime + 0.9);
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioContext();
+
+    function getRootNoteIndex(keyStr) {
+      const cleanKey = NOTE_ALIASES[keyStr] || keyStr;
+      return NOTES.indexOf(cleanKey);
+    }
+
+    function getAbsoluteChordName(roman, key) {
+      const rootIndex = getRootNoteIndex(key);
+      const semitones = CHORD_DEFINITIONS[roman].semitones;
+      const noteIndex = (rootIndex + semitones) % 12;
+      return NOTES[noteIndex];
+    }
+
+    function playChordAudio(roman) {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const rootIndex = getRootNoteIndex(currentKey);
+      const chordDef = CHORD_DEFINITIONS[roman];
+      const baseMidi = 60 + ((rootIndex + chordDef.semitones) % 12);
+
+      chordDef.intervals.forEach(interval => {
+        const midiNote = baseMidi + interval;
+        const freq = 440 * Math.pow(2, (midiNote - 69) / 12);
+        
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + 1.2);
+      });
+    }
+
+    function removeChordAt(index) {
+      activeProgression.splice(index, 1);
+      updateUI();
+    }
+
+    function renderButtons() {
+      Object.keys(CHORD_GROUPS).forEach(groupKey => {
+        const container = document.getElementById(`${groupKey}-grid`);
+        container.innerHTML = '';
+        
+        CHORD_GROUPS[groupKey].forEach(roman => {
+          const btn = document.createElement('button');
+          btn.className = 'btn-chord';
+          const absoluteName = getAbsoluteChordName(roman, currentKey);
+          
+          btn.innerHTML = `${roman} <span>${absoluteName}</span>`;
+          btn.onclick = () => {
+            playChordAudio(roman);
+            activeProgression.push(roman);
+            updateUI();
+          };
+          container.appendChild(btn);
         });
-      } catch (e) {
-        console.log("Audio play blocked by browser policy");
-      }
+      });
     }
 
-    function addChord(numeral) {
-      progression.push(numeral);
-      playAudioTone(numeral);
-      render();
-    }
-
-    function clearProgression() {
-      progression = [];
-      render();
-    }
-
-    function render() {
+    function updateUI() {
       const display = document.getElementById('progression-display');
-      if (progression.length === 0) {
-        display.innerHTML = `<span class="text-slate-600 text-sm italic">Tap chord buttons above to start matching...</span>`;
+      display.innerHTML = '';
+
+      if (activeProgression.length === 0) {
+        display.innerHTML = `<span style="color: var(--text-muted);">Click chords below to build a progression...</span>`;
       } else {
-        display.innerHTML = progression.map(n => `
-          <span class="px-3.5 py-1.5 bg-indigo-600 text-white font-mono font-bold text-sm rounded-lg shadow-md border border-indigo-400/30">
-            ${n}
-          </span>
-        `).join('');
+        activeProgression.forEach((roman, index) => {
+          const tag = document.createElement('div');
+          tag.className = 'chord-tag';
+          tag.title = 'Click to remove';
+          tag.innerHTML = `${roman} <span>(${getAbsoluteChordName(roman, currentKey)})</span> ×`;
+          tag.onclick = () => removeChordAt(index);
+          display.appendChild(tag);
+        });
       }
 
-      // Filter matches
-      const matches = MUSIC_CATALOG.filter(piece => {
-        if (progression.length === 0) return true;
-        return piece.progression.join(',').includes(progression.join(','));
+      findMatches();
+    }
+
+    // Sub-sequence Matcher (finds progressions embedded in longer sequences)
+    function findMatches() {
+      const matchesContainer = document.getElementById('matches-list');
+      const matchCount = document.getElementById('match-count');
+      
+      if (activeProgression.length === 0) {
+        matchesContainer.innerHTML = `<p style="color: var(--text-muted);">No matching songs found for this sequence yet.</p>`;
+        matchCount.innerText = '0';
+        return;
+      }
+
+      const userSeq = activeProgression.join(',');
+
+      const matches = SONG_DATABASE.filter(song => {
+        const songSeq = song.progression.join(',');
+        // Matches exact sequence or looping sequence
+        const doubleSongSeq = song.progression.concat(song.progression).join(',');
+        return doubleSongSeq.includes(userSeq);
       });
 
-      document.getElementById('results-count').innerText = matches.length;
-      
-      const resultsContainer = document.getElementById('results-list');
+      matchCount.innerText = matches.length;
+
       if (matches.length === 0) {
-        resultsContainer.innerHTML = `
-          <div class="p-8 text-center bg-slate-900/50 rounded-xl border border-slate-800 text-slate-500 text-sm">
-            No exact match found for this sequence yet. Try clearing or choosing a shorter progression!
-          </div>
-        `;
+        matchesContainer.innerHTML = `<p style="color: var(--text-muted);">No verified matches found for this specific sequence.</p>`;
       } else {
-        resultsContainer.innerHTML = matches.map(item => `
-          <div class="p-4 bg-slate-900 border border-slate-800/80 rounded-xl flex flex-col sm:flex-row justify-between sm:items-center gap-3 hover:border-slate-700 transition">
+        matchesContainer.innerHTML = matches.map(song => `
+          <div class="match-item">
             <div>
-              <div class="flex items-center gap-2">
-                <h3 class="font-bold text-indigo-300 text-base">${item.title}</h3>
-                <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">${item.genre}</span>
-              </div>
-              <p class="text-xs text-slate-400 mt-1">${item.artist} (${item.year})</p>
-              <p class="text-[11px] text-slate-500 mt-0.5">Key: <strong class="text-slate-400">${item.key}</strong> | Chords: <span class="text-slate-400">${item.chords.join(' – ')}</span></p>
+              <div class="match-title">${song.title}</div>
+              <div class="match-meta">${song.artist} — [ Progression: ${song.progression.join(' - ')} ]</div>
             </div>
-            <div class="flex flex-wrap gap-1 font-mono text-xs self-start sm:self-center">
-              ${item.progression.map(c => `<span class="px-2 py-1 bg-slate-950 text-indigo-400 font-semibold rounded border border-slate-800">${c}</span>`).join('')}
-            </div>
+            <span class="genre-badge">${song.genre}</span>
           </div>
         `).join('');
       }
     }
 
-    render();
+    document.getElementById('key-select').onchange = (e) => {
+      currentKey = e.target.value;
+      renderButtons();
+      updateUI();
+    };
+
+    document.getElementById('btn-clear').onclick = () => {
+      activeProgression = [];
+      updateUI();
+    };
+
+    document.getElementById('btn-play').onclick = () => {
+      activeProgression.forEach((roman, index) => {
+        setTimeout(() => playChordAudio(roman), index * 600);
+      });
+    };
+
+    renderButtons();
   </script>
 </body>
-  </html>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Music Matcher</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --danger: #f87171;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      max-width: 850px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    header {
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2.2rem;
+      color: var(--accent);
+    }
+
+    header p {
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    select {
+      background: var(--bg-color);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .progression-display {
+      min-height: 50px;
+      background: var(--bg-color);
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .chord-tag {
+      background: var(--accent);
+      color: #000;
+      font-weight: bold;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+    }
+
+    .chord-tag:hover {
+      background: var(--danger);
+      color: #ffffff;
+    }
+
+    .chord-tag span {
+      font-size: 0.8rem;
+      opacity: 0.75;
+    }
+
+    .chord-group {
+      margin-top: 1rem;
+    }
+
+    .chord-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 0.5rem;
+    }
+
+    button.btn-chord {
+      background: var(--bg-color);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 0.75rem 0.5rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    button.btn-chord:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    button.btn-chord span {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .btn-action {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .btn-action:hover {
+      color: var(--text-main);
+      border-color: var(--text-main);
+    }
+
+    .matches-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .match-item {
+      padding: 0.85rem 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .match-item:last-child {
+      border-bottom: none;
+    }
+
+    .match-title {
+      font-weight: bold;
+      font-size: 1.05rem;
+    }
+
+    .match-meta {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+
+    .genre-badge {
+      background: var(--bg-color);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      font-size: 0.75rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      text-transform: capitalize;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Music Matcher</h1>
+      <p>Analyze chord progressions across classical, pop, rock, and film scores.</p>
+    </header>
+
+    <div class="card">
+      <div class="controls-row">
+        <label for="key-select"><strong>Selected Key:</strong></label>
+        <select id="key-select">
+          <option value="C">C Major</option>
+          <option value="G">G Major</option>
+          <option value="D">D Major</option>
+          <option value="A">A Major</option>
+          <option value="E">E Major</option>
+          <option value="F">F Major</option>
+          <option value="Bb">Bb Major</option>
+          <option value="Eb">Eb Major</option>
+        </select>
+      </div>
+
+      <div class="progression-display" id="progression-display">
+        <span style="color: var(--text-muted);">Click chords below to build a progression...</span>
+      </div>
+
+      <div class="actions">
+        <button class="btn-action" id="btn-play">▶ Play Sequence</button>
+        <button class="btn-action" id="btn-clear">Clear</button>
+      </div>
+
+      <!-- Diatonic Chords -->
+      <div class="chord-group">
+        <label>Diatonic Chords</label>
+        <div class="grid" id="diatonic-grid"></div>
+      </div>
+
+      <!-- Extensions & Variations -->
+      <div class="chord-group">
+        <label>Extensions & Variations</label>
+        <div class="grid" id="extension-grid"></div>
+      </div>
+
+      <!-- Modal Interchange / Borrowed -->
+      <div class="chord-group">
+        <label>Borrowed Chords</label>
+        <div class="grid" id="borrowed-grid"></div>
+      </div>
+    </div>
+
+    <!-- Matches Output -->
+    <div class="card">
+      <div class="matches-header">
+        <h2 style="margin: 0;">Matching Music (<span id="match-count">0</span>)</h2>
+      </div>
+      <div id="matches-list">
+        <p style="color: var(--text-muted);">No matching songs found for this sequence yet.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const NOTE_ALIASES = { 'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#' };
+
+    const CHORD_DEFINITIONS = {
+      'I':   { semitones: 0,  intervals: [0, 4, 7] },
+      'ii':  { semitones: 2,  intervals: [0, 3, 7] },
+      'iii': { semitones: 4,  intervals: [0, 3, 7] },
+      'IV':  { semitones: 5,  intervals: [0, 4, 7] },
+      'V':   { semitones: 7,  intervals: [0, 4, 7] },
+      'vi':  { semitones: 9,  intervals: [0, 3, 7] },
+      'vii°':{ semitones: 11, intervals: [0, 3, 6] },
+      'Imaj7':{ semitones: 0, intervals: [0, 4, 7, 11] },
+      'V7':   { semitones: 7, intervals: [0, 4, 7, 10] },
+      'vi7':  { semitones: 9, intervals: [0, 3, 7, 10] },
+      'iv':   { semitones: 5, intervals: [0, 3, 7] },
+      'bVI':  { semitones: 8, intervals: [0, 4, 7] },
+      'bVII': { semitones: 10, intervals: [0, 4, 7] }
+    };
+
+    const CHORD_GROUPS = {
+      diatonic: ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'],
+      extension: ['Imaj7', 'V7', 'vi7'],
+      borrowed: ['iv', 'bVI', 'bVII']
+    };
+
+    // Expanded Verified Database (Pop, Rock, Classical, Film)
+    const SONG_DATABASE = [
+      // Classical & Traditional
+      { title: "Canon in D", artist: "Johann Pachelbel", genre: "classical", progression: ['I', 'V', 'vi', 'iii', 'IV', 'I', 'IV', 'V'] },
+      { title: "Symphony No. 9 (Ode to Joy)", artist: "Ludwig van Beethoven", genre: "classical", progression: ['I', 'V', 'I', 'V'] },
+      { title: "Air on the G String", artist: "J.S. Bach", genre: "classical", progression: ['I', 'V', 'vi', 'iii', 'IV'] },
+      { title: "Clair de Lune", artist: "Claude Debussy", genre: "classical", progression: ['I', 'IV', 'Imaj7'] },
+      { title: "Prelude in C Major (BWV 846)", artist: "J.S. Bach", genre: "classical", progression: ['I', 'ii', 'V7', 'I'] },
+
+      // Pop & Rock (I–V–vi–IV Axis of Awesome variations)
+      { title: "Let It Be", artist: "The Beatles", genre: "pop", progression: ['I', 'V', 'vi', 'IV'] },
+      { title: "Don't Stop Believin'", artist: "Journey", genre: "rock", progression: ['I', 'V', 'vi', 'IV'] },
+      { title: "No Woman, No Cry", artist: "Bob Marley", genre: "reggae", progression: ['I', 'V', 'vi', 'IV'] },
+      { title: "With or Without You", artist: "U2", genre: "rock", progression: ['I', 'V', 'vi', 'IV'] },
+      { title: "Someone Like You", artist: "Adele", genre: "pop", progression: ['I', 'V', 'vi', 'IV'] },
+      { title: "Where Is the Love?", artist: "The Black Eyed Peas", genre: "pop", progression: ['I', 'V', 'vi', 'IV'] },
+      { title: "Can You Feel the Love Tonight", artist: "Elton John", genre: "film score", progression: ['I', 'V', 'vi', 'IV'] },
+
+      // Pop (vi–IV–I–V Sensitive Female Chord Progression)
+      { title: "Complicated", artist: "Avril Lavigne", genre: "pop", progression: ['vi', 'IV', 'I', 'V'] },
+      { title: "Grenade", artist: "Bruno Mars", genre: "pop", progression: ['vi', 'IV', 'I', 'V'] },
+      { title: "Poker Face", artist: "Lady Gaga", genre: "pop", progression: ['vi', 'IV', 'I', 'V'] },
+      { title: "Despacito", artist: "Luis Fonsi ft. Daddy Yankee", genre: "pop", progression: ['vi', 'IV', 'I', 'V'] },
+      { title: "Hello", artist: "Adele", genre: "pop", progression: ['vi', 'IV', 'I', 'V'] },
+
+      // 50s / Doo-Wop (I–vi–IV–V)
+      { title: "Stand by Me", artist: "Ben E. King", genre: "r&b", progression: ['I', 'vi', 'IV', 'V'] },
+      { title: "Every Breath You Take", artist: "The Police", genre: "rock", progression: ['I', 'vi', 'IV', 'V'] },
+      { title: "Earth Angel", artist: "The Penguins", genre: "doo-wop", progression: ['I', 'vi', 'IV', 'V'] },
+      { title: "Unchained Melody", artist: "The Righteous Brothers", genre: "pop", progression: ['I', 'vi', 'IV', 'V'] },
+
+      // Rock & Alternative (I–bVII–IV Andalusian / Borrowed Variations)
+      { title: "Creep", artist: "Radiohead", genre: "alternative", progression: ['I', 'iii', 'IV', 'iv'] },
+      { title: "Sweet Home Alabama", artist: "Lynyrd Skynyrd", genre: "rock", progression: ['V', 'IV', 'I'] },
+      { title: "Wonderwall", artist: "Oasis", genre: "britpop", progression: ['vi', 'bVII', 'IV', 'I'] },
+      { title: "Hey Jude", artist: "The Beatles", genre: "rock", progression: ['I', 'V', 'V7', 'I', 'IV', 'I', 'V', 'I'] },
+
+      // Jazz & Standards (ii–V–I)
+      { title: "Autumn Leaves", artist: "Joseph Kosma / Jazz Standard", genre: "jazz", progression: ['ii', 'V7', 'Imaj7', 'IV'] },
+      { title: "Fly Me to the Moon", artist: "Frank Sinatra", genre: "jazz", progression: ['vi', 'ii', 'V7', 'Imaj7'] },
+      { title: "Sunday Morning", artist: "Maroon 5", genre: "pop", progression: ['ii', 'V', 'I'] }
+    ];
+
+    let currentKey = 'C';
+    let activeProgression = [];
+
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioContext();
+
+    function getRootNoteIndex(keyStr) {
+      const cleanKey = NOTE_ALIASES[keyStr] || keyStr;
+      return NOTES.indexOf(cleanKey);
+    }
+
+    function getAbsoluteChordName(roman, key) {
+      const rootIndex = getRootNoteIndex(key);
+      const semitones = CHORD_DEFINITIONS[roman].semitones;
+      const noteIndex = (rootIndex + semitones) % 12;
+      return NOTES[noteIndex];
+    }
+
+    function playChordAudio(roman) {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const rootIndex = getRootNoteIndex(currentKey);
+      const chordDef = CHORD_DEFINITIONS[roman];
+      const baseMidi = 60 + ((rootIndex + chordDef.semitones) % 12);
+
+      chordDef.intervals.forEach(interval => {
+        const midiNote = baseMidi + interval;
+        const freq = 440 * Math.pow(2, (midiNote - 69) / 12);
+        
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + 1.2);
+      });
+    }
+
+    function removeChordAt(index) {
+      activeProgression.splice(index, 1);
+      updateUI();
+    }
+
+    function renderButtons() {
+      Object.keys(CHORD_GROUPS).forEach(groupKey => {
+        const container = document.getElementById(`${groupKey}-grid`);
+        container.innerHTML = '';
+        
+        CHORD_GROUPS[groupKey].forEach(roman => {
+          const btn = document.createElement('button');
+          btn.className = 'btn-chord';
+          const absoluteName = getAbsoluteChordName(roman, currentKey);
+          
+          btn.innerHTML = `${roman} <span>${absoluteName}</span>`;
+          btn.onclick = () => {
+            playChordAudio(roman);
+            activeProgression.push(roman);
+            updateUI();
+          };
+          container.appendChild(btn);
+        });
+      });
+    }
+
+    function updateUI() {
+      const display = document.getElementById('progression-display');
+      display.innerHTML = '';
+
+      if (activeProgression.length === 0) {
+        display.innerHTML = `<span style="color: var(--text-muted);">Click chords below to build a progression...</span>`;
+      } else {
+        activeProgression.forEach((roman, index) => {
+          const tag = document.createElement('div');
+          tag.className = 'chord-tag';
+          tag.title = 'Click to remove';
+          tag.innerHTML = `${roman} <span>(${getAbsoluteChordName(roman, currentKey)})</span> ×`;
+          tag.onclick = () => removeChordAt(index);
+          display.appendChild(tag);
+        });
+      }
+
+      findMatches();
+    }
+
+    // Sub-sequence Matcher (finds progressions embedded in longer sequences)
+    function findMatches() {
+      const matchesContainer = document.getElementById('matches-list');
+      const matchCount = document.getElementById('match-count');
+      
+      if (activeProgression.length === 0) {
+        matchesContainer.innerHTML = `<p style="color: var(--text-muted);">No matching songs found for this sequence yet.</p>`;
+        matchCount.innerText = '0';
+        return;
+      }
+
+      const userSeq = activeProgression.join(',');
+
+      const matches = SONG_DATABASE.filter(song => {
+        const songSeq = song.progression.join(',');
+        // Matches exact sequence or looping sequence
+        const doubleSongSeq = song.progression.concat(song.progression).join(',');
+        return doubleSongSeq.includes(userSeq);
+      });
+
+      matchCount.innerText = matches.length;
+
+      if (matches.length === 0) {
+        matchesContainer.innerHTML = `<p style="color: var(--text-muted);">No verified matches found for this specific sequence.</p>`;
+      } else {
+        matchesContainer.innerHTML = matches.map(song => `
+          <div class="match-item">
+            <div>
+              <div class="match-title">${song.title}</div>
+              <div class="match-meta">${song.artist} — [ Progression: ${song.progression.join(' - ')} ]</div>
+            </div>
+            <span class="genre-badge">${song.genre}</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    document.getElementById('key-select').onchange = (e) => {
+      currentKey = e.target.value;
+      renderButtons();
+      updateUI();
+    };
+
+    document.getElementById('btn-clear').onclick = () => {
+      activeProgression = [];
+      updateUI();
+    };
+
+    document.getElementById('btn-play').onclick = () => {
+      activeProgression.forEach((roman, index) => {
+        setTimeout(() => playChordAudio(roman), index * 600);
+      });
+    };
+
+    renderButtons();
+  </script>
+</body>
+</html>
